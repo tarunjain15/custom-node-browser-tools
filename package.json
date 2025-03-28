@@ -1,0 +1,68 @@
+{
+  "name": "@tarunjain15/custom-node-browser-tools",
+  "version": "0.1.0",
+  "description": "Custom n8n nodes for browser automation",
+  "keywords": [
+    "n8n-community-node-package",
+    "browser",
+    "automation",
+    "puppeteer"
+  ],
+  "license": "MIT",
+  "homepage": "",
+  "author": {
+    "name": "Tarun",
+    "email": "tarun@example.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tarun/custom-node-browser-tools.git"
+  },
+  "engines": {
+    "node": ">=18.10",
+    "pnpm": ">=9.1"
+  },
+  "packageManager": "pnpm@9.1.4",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc && gulp build:icons",
+    "dev": "tsc --watch",
+    "format": "prettier nodes credentials --write",
+    "lint": "eslint nodes credentials package.json",
+    "lintfix": "eslint nodes credentials package.json --fix",
+    "prepublishOnly": "npm run build && npm run lint -- -c .eslintrc.prepublish.js nodes credentials package.json",
+    "verify": "npm run build && npm run lint -- -c .eslintrc.prepublish.js nodes credentials package.json && npm pack --dry-run",
+    "publish:patch": "./scripts/publish.sh patch",
+    "publish:minor": "./scripts/publish.sh minor",
+    "publish:major": "./scripts/publish.sh major"
+  },
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/BrowserToolsApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/BrowserInstance/BrowserInstance.node.js",
+      "dist/nodes/PageAction/PageAction.node.js"
+    ]
+  },
+  "devDependencies": {
+    "@typescript-eslint/parser": "^7.15.0",
+    "eslint": "^8.56.0",
+    "eslint-plugin-n8n-nodes-base": "^1.16.1",
+    "gulp": "^4.0.2",
+    "prettier": "^3.3.2",
+    "typescript": "^5.5.3"
+  },
+  "dependencies": {
+    "puppeteer": "^22.0.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  }
+}

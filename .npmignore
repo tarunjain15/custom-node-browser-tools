@@ -1,0 +1,45 @@
+# Development files
+.vscode/
+.git/
+.github/
+.editorconfig
+.eslintrc.js
+.eslintrc.prepublish.js
+.prettierrc.js
+tsconfig.json
+gulpfile.js
+pnpm-lock.yaml
+
+# Scripts folder (local development)
+scripts/
+
+# Source files (we only need the compiled output)
+nodes/**/*.ts
+credentials/**/*.ts
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.tsbuildinfo
+
+# Temporary files
+.tmp/
+tmp/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Other unnecessary files
+CODE_OF_CONDUCT.md
+
+# Test files (if any)
+__tests__/
+tests/
+*.spec.*
+*.test.*
+
+# Node modules (installed via package manager)
+node_modules/
