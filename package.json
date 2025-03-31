@@ -1,5 +1,5 @@
 {
-  "name": "@tarunjain15/custom-node-browser-tools",
+  "name": "custom-node-browser-tools",
   "version": "2.0.0",
   "description": "Custom n8n nodes for browser automation",
   "keywords": [
@@ -9,7 +9,7 @@
     "puppeteer"
   ],
   "license": "MIT",
-  "homepage": "",
+  "homepage": "https://github.com/tarun/custom-node-browser-tools",
   "author": {
     "name": "Tarun",
     "email": "tarun@example.com"
