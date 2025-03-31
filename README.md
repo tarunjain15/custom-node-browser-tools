@@ -29,7 +29,7 @@ This package includes the following nodes:
 1. Navigate to the n8n installation directory
 2. Install the package:
    ```
-   npm install @tarunjain15/custom-node-browser-tools
+   npm install custom-node-browser-tools
    ```
 
 3. Start n8n
