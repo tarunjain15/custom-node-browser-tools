@@ -1,6 +1,6 @@
 {
   "name": "custom-node-browser-tools",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Custom n8n nodes for browser automation",
   "keywords": [
     "n8n-community-node-package",
