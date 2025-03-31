@@ -34,7 +34,7 @@ export class TextInputActionHandler extends ActionHandler {
       // This avoids the JavaScript world context error
       if (selectorType === SelectorType.XPATH) {
         await page.evaluate(
-          (selector, inputText) => {
+          (selector: string): void => {
             const element = document.evaluate(
               selector,
               document,
@@ -71,7 +71,6 @@ export class TextInputActionHandler extends ActionHandler {
             (element as HTMLElement).focus();
           },
           typeSelector,
-          text,
         );
 
         // Use keyboard typing after focus (in page context)

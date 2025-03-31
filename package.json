@@ -30,7 +30,8 @@
     "format": "prettier nodes credentials --write",
     "lint": "eslint nodes credentials package.json",
     "lintfix": "eslint nodes credentials package.json --fix",
-    "prepublishOnly": "npm run build && npm run lint -- -c .eslintrc.prepublish.js nodes credentials package.json",
+    "prepublish:lint": "eslint nodes credentials package.json --fix -c .eslintrc.prepublish.js",
+    "prepublishOnly": "npm run build && npm run prepublish:lint && npm run lint -- -c .eslintrc.prepublish.js nodes credentials package.json",
     "verify": "npm run build && npm run lint -- -c .eslintrc.prepublish.js nodes credentials package.json && npm pack --dry-run",
     "publish:patch": "./scripts/publish.sh patch",
     "publish:minor": "./scripts/publish.sh minor",
@@ -50,7 +51,8 @@
     ]
   },
   "devDependencies": {
-    "@typescript-eslint/parser": "^7.15.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
     "eslint": "^8.56.0",
     "eslint-plugin-n8n-nodes-base": "^1.16.1",
     "gulp": "^4.0.2",

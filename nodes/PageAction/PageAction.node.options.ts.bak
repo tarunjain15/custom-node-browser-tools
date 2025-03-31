@@ -11,10 +11,10 @@ export const nodeDescription: INodeTypeDescription = {
 	defaults: {
 		name: 'Page Action',
 	},
-	// @ts-expect-error - n8n expects string literal 'main' but TypeScript expects NodeConnectionType
-	inputs: ['main'],
-	// @ts-expect-error - n8n expects string literal 'main' but TypeScript expects NodeConnectionType
-	outputs: ['main'],
+	// Using string literal 'main' for compatibility with n8n linting rules
+	// while ensuring TypeScript compiler compatibility via type assertion
+	inputs: ['main'] as unknown as INodeTypeDescription['inputs'],
+	outputs: ['main'] as unknown as INodeTypeDescription['outputs'],
 	properties: [
 		{
 			displayName: 'Browser Name',
@@ -38,6 +38,7 @@ export const nodeDescription: INodeTypeDescription = {
 			displayName: 'Action',
 			name: 'action',
 			type: 'options',
+			default: '',
 			default: PageActionType.GOTO,
 			options: [
 				{
@@ -99,6 +100,7 @@ export const nodeDescription: INodeTypeDescription = {
 			displayName: 'Selector Type',
 			name: 'selectorType',
 			type: 'options',
+			default: '',
 			default: SelectorType.CSS,
 			options: [
 				{
@@ -287,6 +289,7 @@ export const nodeDescription: INodeTypeDescription = {
 					displayName: 'Selector Type',
 					name: 'selectorType',
 					type: 'options',
+					default: '',
 					default: SelectorType.CSS,
 					options: [
 						{
