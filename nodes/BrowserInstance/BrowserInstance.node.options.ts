@@ -35,7 +35,7 @@ export const nodeDescription: INodeTypeDescription = {
 			],
 		},
 		{
-			displayName: 'Browser Name',
+			displayName: 'Browser name is:',
 			name: 'browserName',
 			type: 'string',
 			default: '',
