@@ -40,7 +40,7 @@ export const nodeDescription: INodeTypeDescription = {
 			],
 		},
 		{
-			displayName: 'Browser Name',
+			displayName: 'Browser Name or ID',
 			name: 'browserName',
 			type: 'options',
 			typeOptions: {
@@ -48,8 +48,7 @@ export const nodeDescription: INodeTypeDescription = {
 				loadOptionsDependsOn: [],
 			},
 			default: '',
-			description:
-				'Name of the browser instance to use. Select an eternal browser or leave empty to use a custom name.',
+			description: 'Name of the browser instance to use. Select an eternal browser or leave empty to use a custom name. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 		},
 		{
 			displayName: 'Custom Browser Name',
