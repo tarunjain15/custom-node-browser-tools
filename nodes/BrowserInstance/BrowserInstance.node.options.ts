@@ -17,7 +17,7 @@ export const nodeDescription: INodeTypeDescription = {
 	outputs: ['main'],
 	properties: [
 		{
-			displayName: 'Browser Action',
+			displayName: 'Browser Action hai:',
 			name: 'browserAction',
 			type: 'options',
 			default: BrowserWheelAction.START,
@@ -49,7 +49,7 @@ export const nodeDescription: INodeTypeDescription = {
 			},
 			default: '',
 			description:
-				'Name of the browser instance to use. Select an eternal browser or use a custom name.',
+				'Name of the browser instance to use. Select an eternal browser or leave empty to use a custom name.',
 		},
 		{
 			displayName: 'Custom Browser Name',
@@ -58,7 +58,7 @@ export const nodeDescription: INodeTypeDescription = {
 			default: '',
 			placeholder: 'my_browser',
 			description:
-				'A unique identifier for the browser instance. Only used if Browser Name is empty. If you leave this empty too, a default name will be used based on the execution ID.',
+				'A unique identifier for the browser instance. This overrides any selected Browser Name above. If both fields are empty, a default name will be used based on the execution ID.',
 		},
 		// START action options
 		{

@@ -50,10 +50,18 @@ export class BrowserInstance implements INodeType {
         const selectedBrowserName = this.getNodeParameter('browserName', i, '') as string;
         const customBrowserName = this.getNodeParameter('customBrowserName', i, '') as string;
 
-        // Set default browser name with priority: selectedBrowserName > customBrowserName > default
-        let browserName: string = selectedBrowserName;
-        if (!browserName) {
-          browserName = customBrowserName || `browser_exec_${executionId}`;
+        // Set browser name with priority: customBrowserName > selectedBrowserName > default
+        // This allows custom browser name to override the dropdown selection
+        let browserName: string;
+        if (customBrowserName) {
+          // If custom browser name is provided, it takes precedence
+          browserName = customBrowserName;
+        } else if (selectedBrowserName) {
+          // Otherwise use the selected browser name if available
+          browserName = selectedBrowserName;
+        } else {
+          // If both are empty, use the default
+          browserName = `browser_exec_${executionId}`;
         }
 
         let result: any = {};
