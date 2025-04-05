@@ -51,21 +51,20 @@ export class PageAction implements INodeType {
 
     for (let i = 0; i < items.length; i++) {
       try {
-        // Get the selected browser name from the node parameter
+        // Get browser name from dropdown or custom input
         const selectedBrowserName = this.getNodeParameter('browserName', i, '') as string;
+        const customBrowserName = this.getNodeParameter('customBrowserName', i, '') as string;
 
-        // Set a default browser name if empty, with timestamp to avoid conflicts
+        // Set default browser name with priority: selectedBrowserName > customBrowserName > default
         let browserName: string = selectedBrowserName;
-        if (!selectedBrowserName) {
-          const timestamp = new Date().getTime();
-          browserName = `browser_exec_${executionId}_${timestamp}`;
+        if (!browserName) {
+          browserName = customBrowserName || `browser_exec_${executionId}`;
         }
 
+        // Get the page ID, now using just the execution ID for consistency
         let pageId = this.getNodeParameter('pageId', i, '') as string;
-
         if (!pageId) {
-          const timestamp = new Date().getTime();
-          pageId = `page_exec_${executionId}_${timestamp}`;
+          pageId = `page_exec_${executionId}`;
         }
 
         // Common parameters for all actions

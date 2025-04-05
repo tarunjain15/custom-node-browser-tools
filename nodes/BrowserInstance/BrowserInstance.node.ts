@@ -46,14 +46,14 @@ export class BrowserInstance implements INodeType {
       try {
         const browserAction = this.getNodeParameter('browserAction', i) as BrowserWheelAction;
 
-        // Get and validate browserName
+        // Get browser name from dropdown or custom input
         const selectedBrowserName = this.getNodeParameter('browserName', i, '') as string;
+        const customBrowserName = this.getNodeParameter('customBrowserName', i, '') as string;
 
-        // Set default browser name if empty, with timestamp to avoid conflicts
+        // Set default browser name with priority: selectedBrowserName > customBrowserName > default
         let browserName: string = selectedBrowserName;
-        if (!selectedBrowserName) {
-          const timestamp = new Date().getTime();
-          browserName = `browser_exec_${executionId}_${timestamp}`;
+        if (!browserName) {
+          browserName = customBrowserName || `browser_exec_${executionId}`;
         }
 
         let result: any = {};

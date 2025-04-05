@@ -35,13 +35,25 @@ export const nodeDescription: INodeTypeDescription = {
 			],
 		},
 		{
-			displayName: 'Browser Name:',
+			displayName: 'Browser Name',
 			name: 'browserName',
+			type: 'options',
+			typeOptions: {
+				loadOptionsMethod: 'getBrowserNameSuggestions',
+				loadOptionsDependsOn: [],
+			},
+			default: '',
+			description:
+				'Name of the browser instance to use. Select an eternal browser or use a custom name.',
+		},
+		{
+			displayName: 'Custom Browser Name',
+			name: 'customBrowserName',
 			type: 'string',
 			default: '',
 			placeholder: 'my_browser',
 			description:
-				'A unique identifier for the browser instance. If you leave this empty, a default name will be used based on the execution ID.',
+				'A unique identifier for the browser instance. Only used if Browser Name is empty. If you leave this empty too, a default name will be used based on the execution ID.',
 		},
 		// START action options
 		{

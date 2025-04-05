@@ -217,21 +217,27 @@ export class BrowserWheelBook implements IBrowserManager {
   async resetBrowserInstance(browserKey: string, headless: boolean): Promise<BrowserInstance> {
     this.validateBrowserName(browserKey);
 
-    // For eternal browsers, only reset if it doesn't exist yet
+    // Separate logic for eternal browsers vs regular browsers
     if (this.isEternalBrowser(browserKey)) {
       if (BrowserWheelBook.instances.has(browserKey)) {
-        // Return the existing instance for eternal browsers instead of resetting
+        // For eternal browsers, log that we're keeping the existing instance and any headless mode changes are ignored
+        console.log(`Eternal browser '${browserKey}' already exists. Headless mode cannot be changed.`);
         return BrowserWheelBook.instances.get(browserKey)!;
+      } else {
+        // For a new eternal browser, create it with the requested headless mode and log it
+        console.log(`Creating new eternal browser '${browserKey}' with headless mode: ${headless}`);
+        return this.createBrowserInstance(browserKey, headless);
       }
     } else {
-      // Clean up existing instance if it exists and is not eternal
+      // For non-eternal browsers, always clean up existing instances
       if (BrowserWheelBook.instances.has(browserKey)) {
+        console.log(`Closing existing browser '${browserKey}' to reset with headless mode: ${headless}`);
         await this.cleanupInstance(browserKey);
       }
+      
+      // Create and return a new instance with the specified headless mode
+      return this.createBrowserInstance(browserKey, headless);
     }
-
-    // Create and return a new instance
-    return this.createBrowserInstance(browserKey, headless);
   }
 
   async closeAllInstances(): Promise<void> {
