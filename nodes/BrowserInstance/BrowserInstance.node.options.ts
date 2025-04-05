@@ -17,7 +17,7 @@ export const nodeDescription: INodeTypeDescription = {
 	outputs: ['main'],
 	properties: [
 		{
-			displayName: 'Browser Action hai:',
+			displayName: 'Browser Action is:',
 			name: 'browserAction',
 			type: 'options',
 			default: BrowserWheelAction.START,
