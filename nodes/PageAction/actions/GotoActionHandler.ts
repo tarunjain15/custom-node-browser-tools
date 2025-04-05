@@ -14,11 +14,10 @@ export class GotoActionHandler extends ActionHandler {
     try {
       const startTime = performance.now();
       
-      // Increase timeout to 120 seconds and use more lenient network conditions
-      // networkidle2 waits until there are no more than 2 network connections for at least 500ms
-      // This is more suitable for complex pages and slower servers
+      // Increase timeout to 120 seconds but keep networkidle0 for complete page loading
+      // This is important for screenshot functionality to work correctly
       const response = await executor.page!.goto(action.url, {
-        waitUntil: 'networkidle2',
+        waitUntil: 'networkidle0',
         timeout: 120000,
       });
       

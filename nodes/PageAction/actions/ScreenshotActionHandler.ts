@@ -16,42 +16,80 @@ export class ScreenshotActionHandler extends ActionHandler {
     const encoding = screenshotOptions.encoding ?? 'binary';
 
     try {
-      // Add a delay before screenshot to ensure page is rendered
-      await executor.addRandomDelay(500, 1000);
+      // Add a longer delay before screenshot to ensure page is fully rendered
+      console.log('Adding a longer delay before screenshot to ensure page is fully loaded');
+      await new Promise(resolve => setTimeout(resolve, 3000));
 
       // Wait for the page to be properly loaded
       const page = executor.page;
 
-      // First wait for network to be idle
-      await page
-        .waitForNavigation({
+      try {
+        // Wait for network to be idle using a more generous timeout
+        console.log('Waiting for network to be idle before taking screenshot');
+        await page.waitForNavigation({
           waitUntil: 'networkidle0',
-          timeout: 5000,
-        })
-        .catch(() => {
-          // Ignore navigation timeout - might not be navigating
-          console.log('Navigation timeout during screenshot preparation - continuing');
+          timeout: 10000,
         });
+      } catch (err) {
+        // Ignore navigation timeout - might not be navigating
+        console.log('Navigation timeout during screenshot preparation - continuing anyway');
+      }
 
-      // Then ensure DOM content is loaded
-      await page
-        .evaluate(() => {
+      try {
+        // Wait for content to be fully loaded
+        console.log('Checking if page is fully loaded');
+        await page.evaluate(() => {
           return new Promise((resolve) => {
             if (document.readyState === 'complete') {
               return resolve(true);
             }
 
-            const onLoad = () => {
-              document.removeEventListener('DOMContentLoaded', onLoad);
-              resolve(true);
-            };
-
-            document.addEventListener('DOMContentLoaded', onLoad);
+            window.addEventListener('load', () => resolve(true), { once: true });
+            
+            // Also resolve after 2 seconds as a fallback
+            setTimeout(() => resolve(true), 2000);
           });
-        })
-        .catch((err) => {
-          console.log(`DOM ready check failed, continuing anyway: ${err.message}`);
         });
+        
+        // Additional waiting for any animations or delayed content
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+      } catch (err) {
+        console.log(`DOM ready check failed, continuing anyway: ${err.message}`);
+      }
+      
+      // Wait for all images to load
+      try {
+        console.log('Waiting for all images to load');
+        await page.evaluate(() => {
+          return new Promise((resolve) => {
+            const images = document.querySelectorAll('img');
+            if (images.length === 0) return resolve(true);
+            
+            let loadedImages = 0;
+            const imageLoaded = () => {
+              loadedImages++;
+              if (loadedImages === images.length) {
+                resolve(true);
+              }
+            };
+            
+            images.forEach(img => {
+              if (img.complete) {
+                imageLoaded();
+              } else {
+                img.addEventListener('load', imageLoaded, { once: true });
+                img.addEventListener('error', imageLoaded, { once: true });
+              }
+            });
+            
+            // Fallback timeout after 3 seconds
+            setTimeout(() => resolve(true), 3000);
+          });
+        });
+      } catch (err) {
+        console.log(`Image loading check failed, continuing anyway: ${err.message}`);
+      }
 
       // Take the screenshot
       const screenshotBuffer = await page.screenshot({

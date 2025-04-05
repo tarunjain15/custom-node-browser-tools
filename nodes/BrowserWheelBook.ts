@@ -123,20 +123,8 @@ export class BrowserWheelBook implements IBrowserManager {
           page.setDefaultNavigationTimeout(120000), // Increase default navigation timeout
           page.setDefaultTimeout(60000), // Increase default timeout for other operations
           
-          // Configure request interception to ignore unnecessary resources on production
-          ...(process.env.NODE_ENV === 'production' ? [
-            page.setRequestInterception(true).then(() => {
-              page.on('request', (request) => {
-                const resourceType = request.resourceType();
-                // Skip loading unnecessary resources to improve performance
-                if (['image', 'media', 'font'].includes(resourceType)) {
-                  request.abort();
-                } else {
-                  request.continue();
-                }
-              });
-            })
-          ] : []),
+          // We'll leave resource loading intact to avoid blank screenshots
+          // The performance optimization that was here could cause issues with screenshots
         ]);
 
         // Add error handling for page-level errors
