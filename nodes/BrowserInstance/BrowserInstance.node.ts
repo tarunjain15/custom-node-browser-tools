@@ -49,10 +49,11 @@ export class BrowserInstance implements INodeType {
         // Get and validate browserName
         const selectedBrowserName = this.getNodeParameter('browserName', i, '') as string;
 
-        // Set default browser name if empty
+        // Set default browser name if empty, with timestamp to avoid conflicts
         let browserName: string = selectedBrowserName;
         if (!selectedBrowserName) {
-          browserName = `browser_exec_${executionId}`;
+          const timestamp = new Date().getTime();
+          browserName = `browser_exec_${executionId}_${timestamp}`;
         }
 
         let result: any = {};

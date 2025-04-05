@@ -120,35 +120,80 @@ export class PageActionExecutor {
   ): Promise<{ result: ActionResult; binaryData: { [key: string]: unknown } }> {
     console.log(`[Action Start] Type: ${action.type}, Item Index: ${this.itemIndex}`);
 
-    const { page } = await this.browserManager.getPage(this.browserKey, this.pageId);
-    this.page = page;
-    console.log(`Page obtained - URL: ${page.url()}, Closed: ${page.isClosed()}`);
+    // Retry logic for getPage - some actions might be timing out due to page creation issues
+    let retries = 0;
+    const maxRetries = 3;
+    let lastError;
 
-    try {
-      await this.addRandomDelay();
+    while (retries < maxRetries) {
+      try {
+        const { page } = await this.browserManager.getPage(this.browserKey, this.pageId);
+        this.page = page;
+        console.log(`Page obtained - URL: ${page.url()}, Closed: ${page.isClosed()}`);
 
-      const handler = this.actionHandlers[action.type];
-      if (!handler) {
-        throw new Error(`Unsupported action type: ${action.type}`);
+        // Add a longer random delay for slower servers
+        // This helps avoid race conditions and improves stability
+        const minDelay = process.env.NODE_ENV === 'production' ? 1000 : 500;
+        const maxDelay = process.env.NODE_ENV === 'production' ? 3000 : 2000;
+        await this.addRandomDelay(minDelay, maxDelay);
+
+        const handler = this.actionHandlers[action.type];
+        if (!handler) {
+          throw new Error(`Unsupported action type: ${action.type}`);
+        }
+
+        // Set a timeout for the action execution to prevent hanging
+        let actionTimeout: NodeJS.Timeout;
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          actionTimeout = setTimeout(() => {
+            reject(new Error(`Action ${action.type} timed out after 180 seconds`));
+          }, 180000); // 3 minute timeout
+        });
+
+        try {
+          // Execute the action with a timeout
+          await Promise.race([
+            handler.execute(this, action),
+            timeoutPromise
+          ]);
+        } finally {
+          clearTimeout(actionTimeout!);
+        }
+
+        console.log(`[Action Complete] ${action.type} executed successfully`);
+        return { result: this.results[0], binaryData: this.binaryData };
+      } catch (error) {
+        lastError = error;
+        retries++;
+        
+        // Log the error
+        console.error(
+          `[Action Failed] ${action.type} error (attempt ${retries}/${maxRetries}): ${error instanceof Error ? error.message : 'Unknown error'}`,
+        );
+        
+        // If we've hit max retries or it's an error we shouldn't retry, break out
+        if (
+          retries >= maxRetries || 
+          (error instanceof Error && 
+            (error.message.includes('Protocol error') || error.message.includes('Target closed')))
+        ) {
+          break;
+        }
+        
+        // Otherwise, wait before retrying with exponential backoff
+        await new Promise(resolve => setTimeout(resolve, 2000 * Math.pow(2, retries - 1)));
       }
-
-      await handler.execute(this, action);
-    } catch (error) {
-      console.error(
-        `[Action Failed] ${action.type} error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      );
-      const result: ActionResult = {
-        success: false,
-        action: action.type,
-        error: error instanceof Error ? error.message : String(error),
-        pageId: this.pageId,
-      };
-
-      if (!this.executeFunctions.continueOnFail()) throw error;
-      return { result, binaryData: this.binaryData };
     }
 
-    console.log(`[Action Complete] ${action.type} executed successfully`);
-    return { result: this.results[0], binaryData: this.binaryData };
+    // If we get here, all retries failed
+    const result: ActionResult = {
+      success: false,
+      action: action.type,
+      error: lastError instanceof Error ? lastError.message : String(lastError),
+      pageId: this.pageId,
+    };
+
+    if (!this.executeFunctions.continueOnFail()) throw lastError;
+    return { result, binaryData: this.binaryData };
   }
 }
