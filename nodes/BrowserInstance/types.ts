@@ -1,6 +1,7 @@
 export enum BrowserWheelAction {
   START = 'start',
   STOP = 'stop',
+  LIST = 'list',
 }
 
 export enum PageAction {

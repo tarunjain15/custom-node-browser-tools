@@ -2,7 +2,7 @@
 import { Page, Browser } from 'puppeteer';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-import { IBrowserManager, BrowserInstance } from './IBrowserManager';
+import { IBrowserManager, BrowserInstance, BrowserInfo } from './IBrowserManager';
 
 export enum EternalBrowserName {
   CHATGPT = 'chatgpt',
@@ -13,6 +13,8 @@ export enum EternalBrowserName {
 
 export class BrowserWheelBook implements IBrowserManager {
   private static instances: Map<string, BrowserInstance> = new Map();
+  private static instanceCreationTimes: Map<string, Date> = new Map();
+  private static instanceHeadlessMode: Map<string, boolean> = new Map();
 
   private validateBrowserName(browserKey: string): void {
     if (!browserKey || browserKey.trim() === '') {
@@ -88,7 +90,11 @@ export class BrowserWheelBook implements IBrowserManager {
       pages: new Map(),
     };
 
+    // Record browser creation time and headless mode
     BrowserWheelBook.instances.set(browserKey, instance);
+    BrowserWheelBook.instanceCreationTimes.set(browserKey, new Date());
+    BrowserWheelBook.instanceHeadlessMode.set(browserKey, headless);
+    
     return instance;
   }
 
@@ -168,13 +174,15 @@ export class BrowserWheelBook implements IBrowserManager {
     return true;
   }
 
-  async cleanupInstance(browserInstanceKey: string): Promise<void> {
+  async cleanupInstance(browserInstanceKey: string, forceClean: boolean = false): Promise<void> {
     this.validateBrowserName(browserInstanceKey);
 
-    // Skip cleanup for eternal browsers
-    if (this.isEternalBrowser(browserInstanceKey)) {
+    // Skip cleanup for eternal browsers unless forceClean is true
+    if (this.isEternalBrowser(browserInstanceKey) && !forceClean) {
       console.log(`Skipping cleanup for eternal browser: ${browserInstanceKey}`);
       return;
+    } else if (this.isEternalBrowser(browserInstanceKey) && forceClean) {
+      console.log(`Force cleaning eternal browser: ${browserInstanceKey}`);
     }
 
     if (BrowserWheelBook.instances.has(browserInstanceKey)) {
@@ -208,8 +216,10 @@ export class BrowserWheelBook implements IBrowserManager {
         console.error(`Error during browser cleanup for ${browserInstanceKey}:`, error);
         // Continue with cleanup despite errors
       } finally {
-        // Always remove the instance from the map
+        // Always remove the instance from all maps
         BrowserWheelBook.instances.delete(browserInstanceKey);
+        BrowserWheelBook.instanceCreationTimes.delete(browserInstanceKey);
+        BrowserWheelBook.instanceHeadlessMode.delete(browserInstanceKey);
       }
     }
   }
@@ -257,13 +267,85 @@ export class BrowserWheelBook implements IBrowserManager {
       keysToDelete.push(key);
     }
 
-    // Delete the non-eternal browsers from the instances map
+    // Delete the non-eternal browsers from all maps
     for (const key of keysToDelete) {
       BrowserWheelBook.instances.delete(key);
+      BrowserWheelBook.instanceCreationTimes.delete(key);
+      BrowserWheelBook.instanceHeadlessMode.delete(key);
     }
   }
 
   getEternalBrowserNames(): string[] {
     return Object.values(EternalBrowserName);
+  }
+  
+  /**
+   * Lists all browser instances with their details
+   */
+  async listAllBrowsers(): Promise<BrowserInfo[]> {
+    const browsers: BrowserInfo[] = [];
+    
+    for (const [name, instance] of BrowserWheelBook.instances.entries()) {
+      const isEternal = this.isEternalBrowser(name);
+      const createdAt = BrowserWheelBook.instanceCreationTimes.get(name) || new Date();
+      const headless = BrowserWheelBook.instanceHeadlessMode.get(name) || true;
+      
+      browsers.push({
+        name,
+        createdAt,
+        isEternal,
+        pageCount: instance.pages.size,
+        headless,
+      });
+    }
+    
+    // Sort by creation time (newest first)
+    return browsers.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  /**
+   * Force closes an eternal browser instance
+   * @param browserKey The browser key to force close
+   * @returns True if the browser was closed, false if it wasn't found
+   */
+  async forceCloseEternalBrowser(browserKey: string): Promise<boolean> {
+    this.validateBrowserName(browserKey);
+    
+    if (!BrowserWheelBook.instances.has(browserKey)) {
+      return false;
+    }
+    
+    // Even if it's an eternal browser, we'll force close it
+    const instance = BrowserWheelBook.instances.get(browserKey)!;
+    
+    try {
+      // Close all open pages
+      for (const page of instance.pages.values()) {
+        if (!page.isClosed()) {
+          await page.close().catch(error => {
+            console.error(`Error closing page in ${browserKey}:`, error);
+          });
+        }
+      }
+      
+      // Close the browser
+      await instance.browser.close().catch(error => {
+        console.error(`Error closing browser ${browserKey}:`, error);
+      });
+      
+      // Remove from maps
+      BrowserWheelBook.instances.delete(browserKey);
+      BrowserWheelBook.instanceCreationTimes.delete(browserKey);
+      BrowserWheelBook.instanceHeadlessMode.delete(browserKey);
+      
+      return true;
+    } catch (error) {
+      console.error(`Failed to force close browser ${browserKey}:`, error);
+      // Still remove from our maps to prevent zombie references
+      BrowserWheelBook.instances.delete(browserKey);
+      BrowserWheelBook.instanceCreationTimes.delete(browserKey);
+      BrowserWheelBook.instanceHeadlessMode.delete(browserKey);
+      return true;
+    }
   }
 }

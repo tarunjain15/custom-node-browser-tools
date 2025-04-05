@@ -58,7 +58,22 @@ export class BrowserInstance implements INodeType {
 
         let result: any = {};
 
-        if (browserAction === BrowserWheelAction.START) {
+        if (browserAction === BrowserWheelAction.LIST) {
+          // Handle LIST action - get all browsers
+          const browsers = await browserManager.listAllBrowsers();
+          
+          result = {
+            success: true,
+            action: BrowserWheelAction.LIST,
+            browsers: browsers.map(browser => ({
+              ...browser,
+              createdAt: browser.createdAt.toISOString(),
+            })),
+            count: browsers.length,
+            eternalCount: browsers.filter(b => b.isEternal).length,
+            temporaryCount: browsers.filter(b => !b.isEternal).length,
+          };
+        } else if (browserAction === BrowserWheelAction.START) {
           // Handle Start Browser Action
           const headless = this.getNodeParameter(
             'headless',
@@ -108,16 +123,20 @@ export class BrowserInstance implements INodeType {
                   : `Page '${pageId}' not found or already deleted`,
               };
             } else {
+              // Get the force clean parameter
+              const forceClean = this.getNodeParameter('forceClean', i, false) as boolean;
+              
               // If no pageId, close the entire browser
-              // Use the global browserManager reference
-              await browserManager.cleanupInstance(browserName);
+              // Use the global browserManager reference with force clean option
+              await browserManager.cleanupInstance(browserName, forceClean);
 
               result = {
                 success: true,
                 browserName,
                 pageId: '',
                 action: BrowserWheelAction.STOP,
-                message: `Browser instance '${browserName}' stopped successfully`,
+                forceClean,
+                message: `Browser instance '${browserName}' stopped successfully${forceClean ? ' (forced)' : ''}`,
               };
             }
 

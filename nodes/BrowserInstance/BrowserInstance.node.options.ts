@@ -32,6 +32,11 @@ export const nodeDescription: INodeTypeDescription = {
 					value: BrowserWheelAction.STOP,
 					description: 'Stop a browser instance or close a specific page',
 				},
+				{
+					name: 'List Browsers',
+					value: BrowserWheelAction.LIST,
+					description: 'List all active browser instances with their details',
+				},
 			],
 		},
 		{
@@ -78,6 +83,19 @@ export const nodeDescription: INodeTypeDescription = {
 			placeholder: 'my_page',
 			description:
 				'The ID of the specific page to close. If left empty, the entire browser instance will be closed.',
+			displayOptions: {
+				show: {
+					browserAction: [BrowserWheelAction.STOP],
+				},
+			},
+		},
+		{
+			displayName: 'Force Clean',
+			name: 'forceClean',
+			type: 'boolean',
+			default: false,
+			description:
+				'Whether to force close the browser even if it is an eternal browser. Use with caution.',
 			displayOptions: {
 				show: {
 					browserAction: [BrowserWheelAction.STOP],

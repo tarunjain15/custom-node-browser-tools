@@ -70,7 +70,41 @@ export class PageActionExecutor {
 
     try {
       if (selectorType === SelectorType.XPATH) {
-        // Use the new locator API with xpath/ prefix
+        // Using evaluate for XPath to be compatible with strict typing
+        await this.page!.waitForFunction(
+          (xpathSelector, shouldBeVisible, shouldBeHidden) => {
+            const node = document.evaluate(
+              xpathSelector, 
+              document, 
+              null, 
+              XPathResult.FIRST_ORDERED_NODE_TYPE, 
+              null
+            ).singleNodeValue;
+            
+            if (!node) return false;
+            
+            if (shouldBeVisible) {
+              // Check if element is visible
+              const rect = (node as Element).getBoundingClientRect();
+              return rect.width > 0 && rect.height > 0;
+            }
+            
+            if (shouldBeHidden) {
+              // Check if element is hidden
+              const rect = (node as Element).getBoundingClientRect();
+              return !(rect.width > 0 && rect.height > 0);
+            }
+            
+            return true;
+          },
+          { timeout },
+          selector,
+          visible,
+          hidden
+        );
+        
+        // Use the standard approach with xpath/ prefix
+        // This is fully typed and supported
         await this.page!.waitForSelector(`xpath/${selector}`, { timeout, visible, hidden });
         return await this.page!.$(`xpath/${selector}`);
       } else {
