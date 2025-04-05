@@ -108,35 +108,53 @@ export class BrowserInstance implements INodeType {
           }
 
           try {
-            if (pageId) {
-              // If pageId is provided, just close the specific page
-              // Use the global browserManager reference
+            // Get the force clean parameter
+            const forceClean = this.getNodeParameter('forceClean', i, false) as boolean;
+            
+            // Check if the browser is an eternal browser
+            const isEternalBrowser = browserManager.getEternalBrowserNames().includes(browserName);
+            
+            // Implement the specific logic:
+            // 1. If force-clean is true, close the entire browser regardless of type
+            // 2. If eternal browser and force-clean is false, close only the page
+            // 3. Otherwise, close the entire browser
+            
+            if (forceClean) {
+              // Force clean is true - close the entire browser regardless of eternal status
+              await browserManager.cleanupInstance(browserName, true);
+              
+              result = {
+                success: true,
+                browserName,
+                pageId: '',
+                action: BrowserWheelAction.STOP,
+                forceClean: true,
+                message: `Browser instance '${browserName}' stopped successfully (forced)`,
+              };
+            } else if (isEternalBrowser && !forceClean) {
+              // Eternal browser without force-clean - close only the specific page
               const success = await browserManager.cleanPage(browserName, pageId);
-
+              
               result = {
                 success,
                 browserName,
                 pageId,
                 action: PageAction.CLOSE,
                 message: success
-                  ? `Page '${pageId}' deleted successfully`
-                  : `Page '${pageId}' not found or already deleted`,
+                  ? `Page '${pageId}' deleted from eternal browser '${browserName}' successfully`
+                  : `Page '${pageId}' not found in eternal browser '${browserName}' or already deleted`,
               };
             } else {
-              // Get the force clean parameter
-              const forceClean = this.getNodeParameter('forceClean', i, false) as boolean;
+              // Regular browser - close the entire browser
+              await browserManager.cleanupInstance(browserName, false);
               
-              // If no pageId, close the entire browser
-              // Use the global browserManager reference with force clean option
-              await browserManager.cleanupInstance(browserName, forceClean);
-
               result = {
                 success: true,
                 browserName,
                 pageId: '',
                 action: BrowserWheelAction.STOP,
-                forceClean,
-                message: `Browser instance '${browserName}' stopped successfully${forceClean ? ' (forced)' : ''}`,
+                forceClean: false,
+                message: `Browser instance '${browserName}' stopped successfully`,
               };
             }
 
